@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Sales - SUNBAY</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+
+
+        /* ── MAIN ── */
+        main {
+            flex: 1;
+            background: radial-gradient(ellipse at 0% 0%, #fde8d8 0%, #fdf0ea 30%, #fff 65%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 72px 24px 80px;
+        }
+        .hero-title {
+            font-size: 40px; font-weight: 700; color: #111;
+            letter-spacing: -0.5px; text-align: center; margin-bottom: 12px;
+        }
+        .hero-sub {
+            font-size: 15px; color: #555; text-align: center;
+            line-height: 1.6; max-width: 480px; margin-bottom: 48px;
+        }
+
+        /* ── FORM ── */
+        form {
+            width: 100%; max-width: 400px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 13px; font-weight: 500; color: #111; }
+        .req { color: #e05a2b; }
+        input, textarea {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid #ddd; border-radius: 8px;
+            font-size: 14px; color: #111; background: #fff;
+            transition: border-color 0.15s;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #999; }
+        ::placeholder { color: #bbb; }
+        textarea { resize: vertical; min-height: 100px; font-family: inherit; }
+
+        #msgBox {
+            padding: 11px 14px; border-radius: 8px;
+            font-size: 13px; display: none;
+        }
+        #msgBox.success { background: #d4f4dd; color: #0d5c2c; border: 1px solid #9ee2b0; }
+        #msgBox.error   { background: #ffe5e5; color: #c41e3a; border: 1px solid #ffb3b3; }
+
+        button[type=submit] {
+            margin-top: 4px; padding: 13px;
+            background: #111; color: #fff; border: none;
+            border-radius: 50px; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: background 0.15s;
+        }
+        button[type=submit]:hover { background: #333; }
+        button[type=submit]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <h1 class="hero-title">Power Your Business with SUNBAY</h1>
+    <p class="hero-sub">SUNBAY brings secure, seamless solutions to power your business.<br>Upgrade your payments today. Contact us to book a demo or discuss partnerships.</p>
+
+    <div id="msgBox"></div>
+
+    <form id="contactForm">
+        <div class="field">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" id="name" name="name" required maxlength="50" placeholder="Full name">
+        </div>
+        <div class="field">
+            <label>Company <span class="req">*</span></label>
+            <input type="text" id="company" name="company" required maxlength="100" placeholder="Company name">
+        </div>
+        <div class="field">
+            <label>Email <span class="req">*</span></label>
+            <input type="email" id="email" name="email" required placeholder="Email address">
+        </div>
+        <div class="field">
+            <label>Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="Phone number">
+        </div>
+        <div class="field">
+            <label>Note</label>
+            <textarea id="message" name="message" maxlength="500" placeholder="Interested in..."></textarea>
+        </div>
+        <button type="submit" id="submitBtn">Submit</button>
+    </form>
+</main>
+
+
+
+<script>
+    const form = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const msgBox = document.getElementById('msgBox');
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = type;
+        msgBox.style.display = 'block';
+        setTimeout(() => { msgBox.style.display = 'none'; }, 5000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Checking...';
+
+        try {
+            const params = new URLSearchParams({ email });
+            if (phone) params.append('phone', phone);
+            const res = await fetch(`/api/contact/check?${params}`);
+            const data = await res.json();
+            if (data.duplicate) {
+                showMsg('This email has already been submitted.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+                return;
+            }
+        } catch (_) {
+            // 查询失败不阻断提交，继续提交流程
+        }
+
+        submitBtn.textContent = 'Submitting...';
+
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('name').value,
+                    email,
+                    company: document.getElementById('company').value,
+                    phone: phone || null,
+                    message: document.getElementById('message').value || null
+                })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showMsg('Thank you! We will contact you soon.', 'success');
+                form.reset();
+            } else {
+                const detail = result.detail;
+                let errMsg;
+                if (Array.isArray(detail)) {
+                    errMsg = detail.map(e => {
+                        const field = e.loc?.[e.loc.length - 1] || '';
+                        return field ? `${field}: ${e.msg}` : e.msg;
+                    }).join(' | ');
+                } else {
+                    errMsg = detail || 'Submission failed. Please try again.';
+                }
+                showMsg(errMsg, 'error');
+            }
+        } catch (_) {
+            showMsg('Network error. Please check your connection.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+        }
+    });
+</script>
+</body>
+</html>
