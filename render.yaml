@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sunbay-official
+    runtime: python
+    buildCommand: pip install -e .
+    startCommand: sunbay-server
+    envVars:
+      - key: DINGTALK_APP_KEY
+        sync: false
+      - key: DINGTALK_APP_SECRET
+        sync: false
+      - key: DINGTALK_CORP_ID
+        sync: false
+      - key: DINGTALK_SHEET_ID
+        sync: false
+      - key: DINGTALK_TABLE_ID
+        sync: false
+      - key: DINGTALK_OPERATOR_ID
+        sync: false
+      - key: SERVER_HOST
+        value: 0.0.0.0
+      - key: SERVER_PORT
+        value: 10000

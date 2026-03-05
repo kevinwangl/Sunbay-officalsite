@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DINGTALK_TABLE_ID: str = "tbl001"
     DINGTALK_OPERATOR_ID: str = "system"  # 操作者ID，默认使用system
     SERVER_HOST: str = "0.0.0.0"
-    SERVER_PORT: int = 8000
+    SERVER_PORT: int = 10000
     
     class Config:
         env_file = ".env"
