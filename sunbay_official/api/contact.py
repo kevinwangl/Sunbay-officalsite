@@ -4,6 +4,7 @@ from ..models.contact import ContactForm
 from ..services.contact_service import ContactService
 from ..dingtalk import DingTalkConfig
 from ..config import settings
+from ..logger import logger
 
 router = APIRouter(prefix="/api", tags=["contact"])
 
@@ -21,9 +22,16 @@ async def submit_contact(contact: ContactForm, request: Request):
     try:
         # 获取客户端 IP（兼容反向代理）
         client_ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
+        
+        logger.info(f"收到表单提交 | IP={client_ip} | email={contact.email} | company={contact.company}")
+        
         result = contact_service.save_contact(contact, client_ip=client_ip)
+        
+        logger.info(f"表单提交成功 | email={contact.email} | record_id={result.get('record_id')}")
+        
         return {"success": True, "message": "提交成功", "data": result}
     except Exception as e:
+        logger.error(f"表单提交失败 | email={contact.email} | error={str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"提交失败: {str(e)}"
@@ -42,5 +50,11 @@ async def check_duplicate(
             detail="请提供 phone 或 email 参数"
         )
     
+    logger.info(f"检查重复 | phone={phone} | email={email}")
+    
     is_duplicate = contact_service.check_duplicate(phone=phone, email=email)
+    
+    if is_duplicate:
+        logger.warning(f"发现重复提交 | phone={phone} | email={email}")
+    
     return {"duplicate": is_duplicate}

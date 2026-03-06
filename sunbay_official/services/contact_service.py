@@ -1,5 +1,6 @@
 from ..dingtalk import SheetManager, DingTalkConfig, SheetError
 from ..models.contact import ContactForm
+from ..logger import logger
 from typing import Dict
 
 
@@ -22,8 +23,11 @@ class ContactService:
                 "message": contact.message or "",
                 "ip": client_ip,
             }
-            return self.sheet.add_record(self.sheet_id, data, self.table_id)
-        except SheetError:
+            logger.debug(f"准备保存记录 | data={data}")
+            result = self.sheet.add_record(self.sheet_id, data, self.table_id)
+            return result
+        except SheetError as e:
+            logger.error(f"保存记录失败 | email={contact.email} | error={str(e)}")
             raise
 
     def check_duplicate(self, phone: str = None, email: str = None) -> bool:
@@ -32,11 +36,13 @@ class ContactService:
             records = self.sheet.get_records(
                 self.sheet_id, self.table_id, fields=["手机", "邮箱"]
             )
+            logger.debug(f"查询到 {len(records)} 条记录")
             for record in records:
                 if phone and record.get("手机") == phone:
                     return True
                 if email and record.get("邮箱") == email:
                     return True
             return False
-        except SheetError:
+        except SheetError as e:
+            logger.warning(f"重复检查失败，允许提交 | error={str(e)}")
             return False  # 查询失败不阻断提交

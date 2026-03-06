@@ -6,6 +6,7 @@ from typing import Optional
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_dingtalk.oauth2_1_0 import client as oauth_client, models as oauth_models
 from .exceptions import AuthError
+from ..logger import logger
 
 
 class DingTalkConfig:
@@ -72,6 +73,8 @@ class DingTalkBaseClient:
         if self._access_token_cache and not force_refresh:
             return self._access_token_cache
         
+        logger.info("获取钉钉 access_token")
+        
         try:
             request = oauth_models.GetTokenRequest(
                 grant_type='client_credentials',
@@ -82,11 +85,14 @@ class DingTalkBaseClient:
             
             if response and response.body and response.body.access_token:
                 self._access_token_cache = response.body.access_token
+                logger.info("access_token 获取成功")
                 return self._access_token_cache
             
+            logger.error("access_token 响应为空")
             raise AuthError("获取access_token失败：响应为空")
             
         except Exception as e:
+            logger.error(f"认证失败 | error={str(e)}")
             raise AuthError(f"认证失败: {str(e)}")
     
     def create_headers(self, header_class, include_operator_id: bool = False):

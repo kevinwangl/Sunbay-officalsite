@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .api import contact
 from .config import settings
+from .logger import logger
 import os
 
 app = FastAPI(title="Sunbay Official Website", version="0.1.0")
@@ -28,6 +29,9 @@ async def health():
 
 
 def run():
+    logger.info(f"启动 Sunbay 服务 | host={settings.SERVER_HOST} | port={settings.SERVER_PORT}")
+    logger.info(f"配置加载 | sheet_id={settings.DINGTALK_SHEET_ID} | table_id={settings.DINGTALK_TABLE_ID}")
+    
     import uvicorn
     uvicorn.run(
         "sunbay_official.main:app",

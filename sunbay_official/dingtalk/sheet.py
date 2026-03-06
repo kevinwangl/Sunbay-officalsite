@@ -3,6 +3,7 @@ from alibabacloud_dingtalk.notable_1_0 import client, models
 from alibabacloud_tea_util import models as util_models
 from .base import DingTalkBaseClient, DingTalkConfig
 from .exceptions import SheetError, AuthError
+from ..logger import logger
 
 
 class SheetManager(DingTalkBaseClient):
@@ -17,6 +18,8 @@ class SheetManager(DingTalkBaseClient):
     
     def add_record(self, sheet_id: str, data: Dict[str, Any], table_id: str = "tbl001") -> Dict:
         """添加记录到智能表格"""
+        logger.info(f"添加记录 | sheet_id={sheet_id} | table_id={table_id}")
+        
         try:
             if not self.config.operator_id:
                 raise SheetError("未配置DINGTALK_OPERATOR_ID")
@@ -45,17 +48,23 @@ class SheetManager(DingTalkBaseClient):
             )
             
             if response and response.body and response.body.value:
-                return {"success": True, "record_id": response.body.value[0]}
+                record_id = response.body.value[0]
+                logger.info(f"记录添加成功 | record_id={record_id}")
+                return {"success": True, "record_id": record_id}
             
+            logger.error("添加记录响应为空")
             raise SheetError("响应数据为空")
             
         except AuthError:
             raise
         except Exception as e:
+            logger.error(f"添加记录异常 | error={str(e)}")
             raise SheetError(f"添加记录失败: {str(e)}")
 
     def get_records(self, sheet_id: str, table_id: str, fields: list = None) -> list:
         """查询表格记录"""
+        logger.debug(f"查询记录 | sheet_id={sheet_id} | table_id={table_id}")
+        
         try:
             request = models.GetRecordsRequest(
                 max_results=100,
@@ -71,6 +80,7 @@ class SheetManager(DingTalkBaseClient):
 
             if response and response.body:
                 records = response.body.to_map().get('records', [])
+                logger.debug(f"查询成功 | 记录数={len(records)}")
                 if fields:
                     return [
                         {f: r.get('fields', {}).get(f) for f in fields}
@@ -83,4 +93,5 @@ class SheetManager(DingTalkBaseClient):
         except AuthError:
             raise
         except Exception as e:
+            logger.error(f"查询记录失败 | error={str(e)}")
             raise SheetError(f"查询记录失败: {str(e)}")

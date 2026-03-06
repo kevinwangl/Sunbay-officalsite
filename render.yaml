@@ -5,6 +5,7 @@ services:
     buildCommand: pip install -e .
     startCommand: sunbay-server
     envVars:
+      # 钉钉配置（需在 Render Dashboard 中设置）
       - key: DINGTALK_APP_KEY
         sync: false
       - key: DINGTALK_APP_SECRET
@@ -17,7 +18,17 @@ services:
         sync: false
       - key: DINGTALK_OPERATOR_ID
         sync: false
+      
+      # 服务配置
       - key: SERVER_HOST
         value: 0.0.0.0
       - key: SERVER_PORT
         value: 10000
+      
+      # 日志配置（INFO: 生产环境 | DEBUG: 调试模式）
+      - key: LOG_LEVEL
+        value: INFO
+      
+      # Python 环境配置
+      - key: PYTHONUNBUFFERED
+        value: 1

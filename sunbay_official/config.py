@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     DINGTALK_OPERATOR_ID: str = "system"  # 操作者ID，默认使用system
     SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 10000
+    LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR
     
     class Config:
         env_file = ".env"
