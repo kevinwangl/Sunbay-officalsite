@@ -26,7 +26,8 @@ class SheetManager(DingTalkBaseClient):
                 "手机": data.get("phone", ""),
                 "邮箱": data.get("email", ""),
                 "公司": data.get("company", ""),
-                "留言": data.get("message", "")
+                "留言": data.get("message", ""),
+                "IP地址": data.get("ip", ""),
             }
             
             record = models.InsertRecordsRequestRecords(fields=record_fields)

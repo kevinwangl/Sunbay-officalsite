@@ -1,86 +1,83 @@
 # Sunbay Official Site
 
-Sunbay官网联系表单系统，集成钉钉Notable智能表格。
+Sunbay 官网联系表单服务，集成钉钉 Notable 智能表格，自动记录客户提交信息。
 
-## 安装
+## 快速开始
 
 ```bash
-pip3 install -e .
+pip install -e .
+cp .env.example .env  # 填写配置
+sunbay-server
 ```
+
+访问 `http://localhost:10000/static/index.html`
 
 ## 配置
 
-### 1. 初始化配置
+### 方式一：交互式向导
 
 ```bash
 sunbay-cli init
 ```
 
-交互式向导，依次配置：
-- 钉钉 AppKey / AppSecret / CorpId
-- Notable 表格 URL（自动解析 base_id 和 sheet_id）
-- Operator ID（自动搜索用户获取 unionId）
+### 方式二：手动编辑 `.env`
 
-### 2. 单独获取 UnionId
-
-```bash
-sunbay-cli get-unionid
+```env
+DINGTALK_APP_KEY=
+DINGTALK_APP_SECRET=
+DINGTALK_CORP_ID=
+DINGTALK_SHEET_ID=      # Notable base_id
+DINGTALK_TABLE_ID=      # Notable sheet_id
+DINGTALK_OPERATOR_ID=   # 操作者 unionId
+SERVER_HOST=0.0.0.0
+SERVER_PORT=10000
 ```
 
-### 3. 单独解析 Notable URL
+获取 `DINGTALK_OPERATOR_ID`：
+
+```bash
+sunbay-cli get-unionid   # 按姓名搜索，自动写入 .env
+```
+
+解析 Notable URL：
 
 ```bash
 sunbay-cli parse-notable "https://alidocs.dingtalk.com/i/nodes/xxx?sheetId=yyy"
 ```
 
-## 运行
+## 部署（Render）
 
-```bash
-sunbay-server
-```
+1. 推代码到 GitHub
+2. Render → New Web Service → 连接仓库
+3. Build Command: `pip install -e .`，Start Command: `sunbay-server`
+4. 填写 Environment Variables（`.env` 中的 `DINGTALK_*` 变量）
 
-访问：
-- 联系表单：http://localhost:8000/static/index.html
-- API 文档：http://localhost:8000/docs
-- 健康检查：http://localhost:8000/health
+## API
+
+详见 [API.md](./API.md)
 
 ## 项目结构
 
 ```
 sunbay_official/
-├── api/            # FastAPI 路由
-├── cli/            # CLI 工具
-│   ├── main.py         # 入口
-│   ├── init_config.py  # 初始化配置
-│   ├── get_unionid.py  # 获取 unionId
-│   └── parse_notable.py # 解析 Notable URL
-├── dingtalk/       # 钉钉集成
-│   ├── base.py         # 基础客户端
-│   ├── sheet.py        # Notable 表格操作
-│   └── exceptions.py   # 异常定义
-├── models/         # 数据模型
-├── services/       # 业务逻辑
-├── config.py       # 配置管理
-└── main.py         # 应用入口
-static/
-└── index.html      # 联系表单页面
+├── api/contact.py          # 表单提交 & 重复检查接口
+├── cli/                    # CLI 工具
+├── dingtalk/               # 钉钉 SDK 封装（notable_1_0）
+├── models/contact.py       # 表单数据模型
+├── services/contact_service.py
+├── config.py
+└── main.py
+static/index.html           # 联系表单页面
 ```
 
-## 环境变量
+## Notable 表格字段
 
-```bash
-DINGTALK_APP_KEY=       # 应用 AppKey
-DINGTALK_APP_SECRET=    # 应用 AppSecret
-DINGTALK_CORP_ID=       # 企业 CorpId
-DINGTALK_SHEET_ID=      # Notable base_id
-DINGTALK_TABLE_ID=      # Notable sheet_id
-DINGTALK_OPERATOR_ID=   # 操作者 unionId
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8000
-```
-
-## 技术栈
-
-- FastAPI + Uvicorn
-- alibabacloud_dingtalk SDK (notable_1_0)
-- pydantic-settings
+| 字段 | 说明 |
+|------|------|
+| 姓名 | Full Name |
+| 邮箱 | Email |
+| 公司 | Company |
+| 手机 | Phone（可选）|
+| 留言 | Note（可选）|
+| IP地址 | 自动获取 |
+| 创建时间 | 自动记录 |

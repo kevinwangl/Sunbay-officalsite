@@ -11,7 +11,7 @@ class ContactService:
         self.sheet_id = sheet_id
         self.table_id = table_id
     
-    def save_contact(self, contact: ContactForm) -> Dict:
+    def save_contact(self, contact: ContactForm, client_ip: str = "") -> Dict:
         """保存联系信息到钉钉表格"""
         try:
             data = {
@@ -20,6 +20,7 @@ class ContactService:
                 "email": contact.email,
                 "company": contact.company or "",
                 "message": contact.message or "",
+                "ip": client_ip,
             }
             return self.sheet.add_record(self.sheet_id, data, self.table_id)
         except SheetError:

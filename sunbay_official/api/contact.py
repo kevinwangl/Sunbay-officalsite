@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, Request, status, Query
 from typing import Optional
 from ..models.contact import ContactForm
 from ..services.contact_service import ContactService
@@ -16,10 +16,12 @@ contact_service = ContactService(
 
 
 @router.post("/contact", status_code=status.HTTP_201_CREATED)
-async def submit_contact(contact: ContactForm):
+async def submit_contact(contact: ContactForm, request: Request):
     """提交联系表单"""
     try:
-        result = contact_service.save_contact(contact)
+        # 获取客户端 IP（兼容反向代理）
+        client_ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
+        result = contact_service.save_contact(contact, client_ip=client_ip)
         return {"success": True, "message": "提交成功", "data": result}
     except Exception as e:
         raise HTTPException(
