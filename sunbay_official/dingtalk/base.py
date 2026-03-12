@@ -89,10 +89,12 @@ class DingTalkBaseClient:
                 return self._access_token_cache
             
             logger.error("access_token 响应为空")
+            self._access_token_cache = None
             raise AuthError("获取access_token失败：响应为空")
             
         except Exception as e:
             logger.error(f"认证失败 | error={str(e)}")
+            self._access_token_cache = None
             raise AuthError(f"认证失败: {str(e)}")
     
     def create_headers(self, header_class, include_operator_id: bool = False):
